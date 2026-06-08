@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle Patrimonial - Documento de Arquitetura</title>
+    
+    <style>
+        :root {
+            --cor-texto: #000000;
+            --cor-fundo: #f4f4f9;
+            --cor-papel: #ffffff;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto);
+            margin: 0;
+            padding: 20px;
+        }
+        .folha-a4 {
+            background-color: var(--cor-papel);
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 20px auto;
+            padding: 20mm;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            border-bottom: 1px solid #cccccc;
+            padding-bottom: 5px;
+        }
+        .capa {
+            text-align: center;
+            margin-top: 100px;
+            margin-bottom: 150px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+            overflow: visible;
+        }
+        .mermaid svg {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+        
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            body {
+                background-color: var(--cor-papel);
+                padding: 0;
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .folha-a4 {
+                box-shadow: none;
+                margin: 0;
+                padding: 15mm;
+                width: 210mm;
+                min-height: 297mm;
+                page-break-after: always;
+                break-after: always;
+                box-sizing: border-box;
+            }
+            .quebra-de-pagina {
+                page-break-before: always;
+                break-before: always;
+            }
+            /* Garante que os diagramas caibam perfeitamente na página e não quebrem no meio */
+            .mermaid {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                margin-top: 15px;
+                overflow: visible !important;
+            }
+            .mermaid svg {
+                max-width: 100% !important;
+                max-height: 230mm !important; /* Deixa espaço suficiente para cabeçalhos e texto */
+                height: auto !important;
+                width: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="folha-a4">
+        <div class="capa">
+            <h1>DOCUMENTO DE ARQUITETURA DE SOFTWARE</h1>
+            <h2>Sistema de Controle Patrimonial</h2>
+            <br><br>
+            <p><strong>Disciplina:</strong> Análise e Projeto de Sistemas</p>
+            <p><strong>Professor Responsável:</strong> Hiran Savir</p>
+            <p><strong>Aluno / Autor:</strong> Marcos Alexandre Moraes da Silva</p>
+            <p><strong>Data:</strong> Junho de 2026</p>
+        </div>
+
+        <h2>1. Introdução e Escopo do Sistema</h2>
+        <p>O presente documento detalha a arquitetura do Sistema de Controle Patrimonial, projetado para gerenciar o ciclo de vida, a cadeia de custódia e as manutenções de ativos físicos. O sistema adota um Modelo de Domínio Puro (Domain-Driven Design), garantindo que a lógica de negócio dite as regras de transição de estado, movimentação logística e auditoria, mantendo-se isolada da infraestrutura de banco de dados e de apresentação.</p>
+    </div>
+
+    <div class="folha-a4 quebra-de-pagina">
+        <h2>2. Diagrama de Casos de Uso</h2>
+        <p>Estabelece as fronteiras de segurança e as permissões de interação entre os atores humanos e as funcionalidades do sistema, destacando a segregação de privilégios entre operadores e gestores.</p>
+        <div class="mermaid">
+---
+config:
+  layout: fixed
+---
+flowchart LR
+    Colaborador_Usuario["👤 Colaborador / Usuário"]
+    Gestor_Setor["👤 Gestor do Setor"]
+    Administrador_Patrimonio["👤 Administrador de Patrimônio"]
+    Setor_Financeiro["👤 Financeiro / Contabilidade"]
+
+    subgraph Sistema_Controle_Patrimonial ["Fronteira do Sistema: Controle Patrimonial"]
+        direction TB
+        
+        UC_Consultar_Patrimonio(["Consultar Ativo Patrimonial"])
+        UC_Solicitar_Movimentacao(["Solicitar Movimentação de Ativo"])
+        UC_Cancelar_Solicitacao(["Cancelar Solicitação Pendente"])
+        
+        UC_Avaliar_Transferencia(["Avaliar Solicitação de Transferência"])
+        UC_Atestar_Recebimento(["Atestar Recebimento Físico"])
+        
+        UC_Cadastrar_Ativo(["Cadastrar Novo Ativo Patrimonial"])
+        UC_Registrar_Manutencao(["Registrar Ordem de Manutenção"])
+        UC_Registrar_Baixa(["Registrar Baixa Patrimonial"])
+        
+        UC_Calcular_Depreciacao(["Calcular Depreciação Contábil"])
+        UC_Gerar_Relatorios(["Gerar Relatórios de Inventário"])
+        UC_Autenticar_Usuario(["Autenticar Credenciais de Acesso"])
+    end
+
+    Colaborador_Usuario --- UC_Consultar_Patrimonio
+    Colaborador_Usuario --- UC_Solicitar_Movimentacao
+    
+    Gestor_Setor --- UC_Consultar_Patrimonio
+    Gestor_Setor --- UC_Avaliar_Transferencia
+    Gestor_Setor --- UC_Atestar_Recebimento
+    
+    Administrador_Patrimonio --- UC_Cadastrar_Ativo
+    Administrador_Patrimonio --- UC_Registrar_Manutencao
+    Administrador_Patrimonio --- UC_Registrar_Baixa
+    Administrador_Patrimonio --- UC_Gerar_Relatorios
+    
+    Setor_Financeiro --- UC_Gerar_Relatorios
+    Setor_Financeiro --- UC_Calcular_Depreciacao
+
+    UC_Cancelar_Solicitacao -.->|&quot;&lt;&lt;extend&gt;&gt;&lt;br/&gt;(Condição: Se o status for Pendente)&quot;| UC_Solicitar_Movimentacao
+    UC_Registrar_Baixa -.->|&quot;&lt;&lt;include&gt;&gt;&quot;| UC_Calcular_Depreciacao
+    UC_Solicitar_Movimentacao -.->|&quot;&lt;&lt;include&gt;&gt;&quot;| UC_Autenticar_Usuario
+    UC_Avaliar_Transferencia -.->|&quot;&lt;&lt;include&gt;&gt;&quot;| UC_Autenticar_Usuario
+    UC_Cadastrar_Ativo -.->|&quot;&lt;&lt;include&gt;&gt;&quot;| UC_Autenticar_Usuario
+
+    classDef ator fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#000;
+    class Colaborador_Usuario,Gestor_Setor,Administrador_Patrimonio,Setor_Financeiro ator;
+        </div>
+    </div>
+
+    <div class="folha-a4 quebra-de-pagina">
+        <h2>3. Diagrama de Processos (Modelo e Notação de Processos de Negócio 2.0)</h2>
+        <p>Orquestração do fluxo de movimentação patrimonial, isolado em raias e contemplando eventos de tempo limite e rotas de cancelamento.</p>
+        <div class="mermaid">
+            flowchart TB
+                subgraph Pool_Movimentacao ["Pool: Processo de Movimentação Patrimonial"]
+                    direction TB
+
+                    subgraph Raia_Colaborador ["Raia: Colaborador Solicitante (Tarefas de Usuário)"]
+                        Evento_Inicio(("○ Início:<br/>Necessidade de<br/>Movimentação"))
+                        Tarefa_Iniciar_Solicitacao["👤 Preencher Solicitação<br/>de Movimentação"]
+                        Decisao_Cancelar{"X<br/>Deseja<br/>Cancelar?"}
+                        Tarefa_Solicitar_Cancelamento["👤 Solicitar<br/>Cancelamento no Sistema"]
+                        Tarefa_Confirmar_Despacho["👤 Confirmar Despacho<br/>Físico do Equipamento"]
+                    end
+
+                    subgraph Raia_Sistema ["Raia: Sistema de Controle Patrimonial (Tarefas de Serviço)"]
+                        Tarefa_Verificar_Status["⚙️ Verificar Status<br/>Atual no Banco"]
+                        Decisao_Disponibilidade{"X<br/>Ativo Disponível?"}
+                        Tarefa_Bloquear_Operacao["⚙️ Bloquear Operação<br/>e Notificar Usuário"]
+                        Evento_Fim_Indisponivel((("● Fim:<br/>Processo<br/>Bloqueado")))
+                        
+                        Tarefa_Registrar_Pendente["⚙️ Registrar como<br/>PENDENTE_APROVACAO"]
+                        Tarefa_Notificar_Gestor["✉️ Disparar Notificação<br/>(Correio Eletrônico/Sistema)"]
+                        
+                        Evento_Tempo_Limite(("🕒 Evento de<br/>Tempo: Acordo de Nível de Serviço<br/>(48 Horas)"))
+                        Tarefa_Expirar_Tempo["⚙️ Atualizar para<br/>EXPIRADA_TEMPO_ESGOTADO"]
+                        Evento_Fim_Expirado((("● Fim:<br/>Solicitação<br/>Expirada")))
+                        
+                        Tarefa_Processar_Cancelamento["⚙️ Atualizar para<br/>CANCELADA_SOLICITANTE"]
+                        Evento_Fim_Cancelado((("● Fim:<br/>Processo<br/>Cancelado")))
+                        
+                        Tarefa_Atualizar_Transito["⚙️ Atualizar Status<br/>para EM_TRANSITO"]
+                        
+                        Tarefa_Registrar_Rejeicao["⚙️ Atualizar para<br/>REJEITADA"]
+                        Evento_Fim_Rejeitado((("● Fim:<br/>Movimentação<br/>Rejeitada")))
+                        
+                        Tarefa_Efetivar_Movimentacao["⚙️ Atualizar Responsável<br/>e Localização (EM_USO)"]
+                        Tarefa_Gravar_Auditoria["⚙️ Gravar Auditoria<br/>Imutável no Registro de Eventos"]
+                        Evento_Fim_Sucesso((("● Fim:<br/>Movimentação<br/>Concluída")))
+                    end
+
+                    subgraph Raia_Gestor ["Raia: Gestor do Setor de Destino (Tarefas de Usuário)"]
+                        Tarefa_Avaliar_Solicitacao["👤 Avaliar Mérito<br/>da Transferência"]
+                        Decisao_Aprovacao{"X<br/>Solicitação<br/>Aprovada?"}
+                        Tarefa_Confirmar_Recebimento["👤 Confirmar Recebimento<br/>Físico no Setor"]
+                    end
+                end
+
+                Evento_Inicio --> Tarefa_Iniciar_Solicitacao
+                Tarefa_Iniciar_Solicitacao --> Tarefa_Verificar_Status
+                Tarefa_Verificar_Status --> Decisao_Disponibilidade
+
+                Decisao_Disponibilidade -- "Não (Indisponível/Trânsito)" --> Tarefa_Bloquear_Operacao
+                Tarefa_Bloquear_Operacao --> Evento_Fim_Indisponivel
+
+                Decisao_Disponibilidade -- "Sim (Disponível/Em Uso)" --> Tarefa_Registrar_Pendente
+                Tarefa_Registrar_Pendente --> Tarefa_Notificar_Gestor
+
+                Tarefa_Notificar_Gestor --> Tarefa_Avaliar_Solicitacao
+                Tarefa_Notificar_Gestor -. "Monitoramento Contínuo" .-> Evento_Tempo_Limite
+                Tarefa_Notificar_Gestor -. "Opção Disponível" .-> Decisao_Cancelar
+
+                Decisao_Cancelar -- "Sim" --> Tarefa_Solicitar_Cancelamento
+                Tarefa_Solicitar_Cancelamento --> Tarefa_Processar_Cancelamento
+                Tarefa_Processar_Cancelamento --> Evento_Fim_Cancelado
+
+                Evento_Tempo_Limite --> Tarefa_Expirar_Tempo
+                Tarefa_Expirar_Tempo --> Evento_Fim_Expirado
+
+                Tarefa_Avaliar_Solicitacao --> Decisao_Aprovacao
+                
+                Decisao_Aprovacao -- "Não" --> Tarefa_Registrar_Rejeicao
+                Tarefa_Registrar_Rejeicao --> Evento_Fim_Rejeitado
+
+                Decisao_Aprovacao -- "Sim" --> Tarefa_Atualizar_Transito
+                
+                Tarefa_Atualizar_Transito --> Tarefa_Confirmar_Despacho
+                Tarefa_Confirmar_Despacho --> Tarefa_Confirmar_Recebimento
+                Tarefa_Confirmar_Recebimento --> Tarefa_Efetivar_Movimentacao
+                Tarefa_Efetivar_Movimentacao --> Tarefa_Gravar_Auditoria
+                Tarefa_Gravar_Auditoria --> Evento_Fim_Sucesso
+        </div>
+    </div>
+
+    <div class="folha-a4 quebra-de-pagina">
+        <h2>4. Diagrama de Classes (Modelo de Domínio)</h2>
+        <p>Isolamento da lógica de negócio. A abstração central AtivoPatrimonial dita as regras de transição e ciclo de vida.</p>
+        <div class="mermaid">
+            classDiagram
+                direction TOP_BOTTOM
+
+                class EstadoAtivo {
+                    &lt;&lt;enumeration&gt;&gt;
+                    DISPONIVEL
+                    EM_USO
+                    EM_MANUTENCAO
+                    BAIXADO
+                }
+
+                class TipoImovel {
+                    &lt;&lt;enumeration&gt;&gt;
+                    COMERCIAL
+                    RESIDENCIAL
+                    ESTUDIO
+                }
+
+                class TipoColaborador {
+                    &lt;&lt;enumeration&gt;&gt;
+                    INTERNO_EFETIVO
+                    PRESTADOR_SERVICOS
+                }
+
+                class ClassificacaoBaixa {
+                    &lt;&lt;enumeration&gt;&gt;
+                    SUCATA
+                    VENDA
+                    DOACAO
+                }
+
+                class AtivoPatrimonial {
+                    -int identificadorAtivo
+                    -String nomeAtivo
+                    -EstadoAtivo estadoAtual
+                    -LocalDateTime dataHoraAtualizacao
+                    -int identificadorUsuarioAtualizador
+                    +registrarMovimentacao(String novoLocal, int identificadorUsuario) void
+                    +solicitarManutencaoPreventiva(int identificadorUsuario) void
+                    +solicitarManutencaoCorretiva(int identificadorUsuario) void
+                    +concluirManutencao(int identificadorUsuario) void
+                    +registrarBaixa(ClassificacaoBaixa classificacao, int identificadorUsuario) void
+                }
+
+                class Imovel {
+                    -String enderecoCompleto
+                    -double valorMonetario
+                    -double areaMetrosQuadrados
+                    -int identificadorProprietario
+                    -TipoImovel tipoImovel
+                    +atualizarLocalizacao(String novoEndereco, int identificadorUsuario) void
+                    +calcularDepreciacaoAnual() double
+                }
+
+                class Colaborador {
+                    -int identificadorColaborador
+                    -String nomeCompleto
+                    -String cadastroPessoaFisica
+                    -LocalDate dataNascimento
+                    -String numeroTelefone
+                    -TipoColaborador tipoColaborador
+                    -LocalDateTime dataHoraAtualizacao
+                    -int identificadorUsuarioAtualizador
+                    +atualizarDadosPessoais(String novoNome, String novoTelefone, int identificadorUsuario) void
+                }
+
+                class Usuario {
+                    -int identificadorUsuario
+                    -String nomeUsuario
+                    -String nomeLogin
+                    -String senhaCriptografada
+                    -LocalDateTime dataHoraAtualizacao
+                    -int identificadorUsuarioAtualizador
+                    +autenticarUsuario(String login, String senha) boolean
+                    +atualizarCredenciais(String novaSenha, int identificadorUsuario) void
+                }
+
+                class AtivoPatrimonialRepository {
+                    &lt;&lt;interface&gt;&gt;
+                    +salvar(AtivoPatrimonial ativoPatrimonial) void
+                    +buscarPorIdentificador(int identificadorAtivo) AtivoPatrimonial
+                    +remover(int identificadorAtivo) void
+                }
+
+                class ImovelRepository {
+                    &lt;&lt;interface&gt;&gt;
+                    +salvar(Imovel imovel) void
+                    +buscarPorIdentificador(int identificadorImovel) Imovel
+                }
+
+                class ColaboradorRepository {
+                    &lt;&lt;interface&gt;&gt;
+                    +salvar(Colaborador colaborador) void
+                    +buscarPorIdentificador(int identificadorColaborador) Colaborador
+                }
+
+                class UsuarioRepository {
+                    &lt;&lt;interface&gt;&gt;
+                    +salvar(Usuario usuario) void
+                    +buscarPorIdentificador(int identificadorUsuario) Usuario
+                }
+
+                AtivoPatrimonial &lt;|-- Imovel
+                AtivoPatrimonial --&gt; EstadoAtivo
+                Imovel --&gt; TipoImovel
+                Colaborador --&gt; TipoColaborador
+                AtivoPatrimonial --&gt; ClassificacaoBaixa
+                Usuario --&gt; Colaborador : associa-se
+        </div>
+        
+        <br>
+        <h2>5. Diagrama de Objetos (Retrato de Instância)</h2>
+        <p>Cenário estrito representando a alocação de hardware técnico no ecossistema modelado.</p>
+        <div class="mermaid">
+            classDiagram
+                direction RL
+
+                class encoderPrincipal_AtivoPatrimonial {
+                    identificadorAtivo 10042
+                    nomeAtivo Encoder_Hitachi_Linear_MD9700
+                    estadoAtual ALOCADO_EM_USO
+                    dataHoraAtualizacao 2026_06_05T09_15_00
+                    identificadorUsuarioAtualizador 1042
+                }
+
+                class tecnicoResponsavel_Colaborador {
+                    identificadorColaborador 509
+                    nomeCompleto Keven_Tecnico_de_Broadcast
+                    cadastroPessoaFisica 123_456_789_00
+                    numeroTelefone 85999999999
+                    tipoColaborador INTERNO_EFETIVO
+                    dataHoraAtualizacao 2026_05_20T14_00_00
+                    identificadorUsuarioAtualizador 1042
+                }
+
+                class administradorSistema_Usuario {
+                    identificadorUsuario 1042
+                    nomeUsuario Genilson_Administrador_de_Rede
+                    nomeLogin genilson_admin
+                    senhaCriptografada hash_sha256_8f4a9b2c...
+                    dataHoraAtualizacao 2026_06_01T08_00_00
+                    identificadorUsuarioAtualizador 1
+                }
+
+                class localizacao_Imovel {
+                    identificadorAtivo 701
+                    nomeAtivo Estudio_de_Transmissao_A
+                    estadoAtual ALOCADO_EM_USO
+                    enderecoCompleto Rua_da_Transmissao_100_Rack_Principal
+                    valorMonetario 250000_00
+                    areaMetrosQuadrados 45_50
+                    tipoImovel ESTUDIO
+                    dataHoraAtualizacao 2026_05_25T10_15_00
+                }
+
+                encoderPrincipal_AtivoPatrimonial --> localizacao_Imovel : alocado_fisicamente_em
+                encoderPrincipal_AtivoPatrimonial --> tecnicoResponsavel_Colaborador : sob_responsabilidade_de
+                encoderPrincipal_AtivoPatrimonial --> administradorSistema_Usuario : ultima_movimentacao_aprovada_por
+        </div>
+    </div>
+
+    <div class="folha-a4 quebra-de-pagina">
+        <h2>6. Diagrama de Componentes</h2>
+        <p>Demonstração da Arquitetura Hexagonal, evidenciando o isolamento e a inversão de dependência em direção ao núcleo do sistema.</p>
+        <div class="mermaid">
+            flowchart TD
+                subgraph Camada_Apresentacao_Interface_Visual ["Camada de Apresentação (Interface Visual)"]
+                    Componente_Interface_Gestao["Interface de Gestão"]
+                    Componente_Painel_Relatorios["Painel de Relatórios e Métricas"]
+                end
+
+                subgraph Camada_Aplicacao_Servicos_Distibuidos ["Camada de Aplicação (Serviços Distribuídos)"]
+                    Componente_Servico_Patrimonio["Serviço de Patrimônio (Controladores)"]
+                    Componente_Servico_Autenticacao["Serviço de Autenticação (Controladores)"]
+                end
+
+                subgraph Camada_Dominio_Negocio ["Camada de Domínio (Lógica Pura)"]
+                    Componente_Modulo_Inventario_Movimentacao["Módulo de Regras de Inventário e Movimentação"]
+                    Componente_Modulo_Autenticacao_Dominio["Módulo de Regras de Autenticação e Criptografia"]
+                    Componente_Interfaces_Repositorios["Interfaces de Repositórios (Contratos de Domínio)"]
+                end
+
+                subgraph Camada_Infraestrutura_Adaptadores ["Camada de Infraestrutura e Adaptadores"]
+                    Componente_Implementacao_Repositorios["Implementação de Repositórios (Adaptador de Banco de Dados)"]
+                    Componente_Fila_Mensageria_Eventos["Fila de Eventos de Domínio (Corretor de Mensagens)"]
+                    Componente_Servico_Notificacoes_Alertas["Serviço Autônomo de Notificações e Alertas"]
+                end
+
+                subgraph Camada_Persistencia_Dados ["Armazenamento de Dados Físico"]
+                    Componente_Banco_Dados_Relacional[("Banco de Dados Relacional MySQL")]
+                end
+
+                Componente_Interface_Gestao -- "Requisita Informações" --&gt; Componente_Servico_Patrimonio
+                Componente_Interface_Gestao -- "Requisita Autenticação" --&gt; Componente_Servico_Autenticacao
+                Componente_Painel_Relatorios -- "Consulta Informações" --&gt; Componente_Servico_Patrimonio
+
+                Componente_Servico_Patrimonio -- "Orquestra Casos de Uso" --&gt; Componente_Modulo_Inventario_Movimentacao
+                Componente_Servico_Autenticacao -- "Delega Validação" --&gt; Componente_Modulo_Autenticacao_Dominio
+
+                Componente_Modulo_Inventario_Movimentacao -- "Define Contrato de Persistência" --&gt; Componente_Interfaces_Repositorios
+                Componente_Modulo_Autenticacao_Dominio -- "Define Contrato de Persistência" --&gt; Componente_Interfaces_Repositorios
+
+                Componente_Implementacao_Repositorios -. "Implementa Contratos (Inversão de Dependência)" .-&gt; Componente_Interfaces_Repositorios
+                
+                Componente_Implementacao_Repositorios -- "Executa Consultas" --&gt; Componente_Banco_Dados_Relacional
+
+                Componente_Modulo_Inventario_Movimentacao -- "Publica Evento" --&gt; Componente_Fila_Mensageria_Eventos
+                Componente_Fila_Mensageria_Eventos -- "Consome Evento de Forma Assíncrona" --&gt; Componente_Servico_Notificacoes_Alertas
+        </div>
+
+    <div class="folha-a4 quebra-de-pagina">
+        <h2>7. Diagrama de Máquina de Estados</h2>
+        <p>Modelagem rigorosa da realidade logística, eliminando transições fisicamente impossíveis.</p>
+        <div class="mermaid">
+            stateDiagram-v2
+                direction TB
+
+                state "Estado: Aguardando Conferência Inicial" as Estado_Aguardando_Conferencia_Inicial
+                state "Estado: Disponível em Estoque" as Estado_Disponivel_Estoque
+                
+                state "Estado: Em Trânsito Físico" as Estado_Em_Transito_Fisico
+                state "Estado: Alocado em Uso" as Estado_Alocado_Em_Uso
+                
+                state "Estado: Em Manutenção Preventiva" as Estado_Em_Manutencao_Preventiva
+                state "Estado: Em Manutenção Corretiva" as Estado_Em_Manutencao_Corretiva
+                
+                state "Estado Terminal: Baixado Inativo" as Estado_Terminal_Baixado_Inativo
+
+                [*] --> Estado_Aguardando_Conferencia_Inicial : Evento - Registrar Novo Ativo
+
+                Estado_Aguardando_Conferencia_Inicial --> Estado_Disponivel_Estoque : Evento - Confirmar Tombamento Físico
+
+                Estado_Disponivel_Estoque --> Estado_Em_Transito_Fisico : Evento - Autorizar Movimentacao de Saída
+                Estado_Em_Transito_Fisico --> Estado_Alocado_Em_Uso : Evento - Atestar Recebimento no Destino
+                Estado_Em_Transito_Fisico --> Estado_Disponivel_Estoque : Evento - Cancelar Transporte e Retornar
+                
+                Estado_Alocado_Em_Uso --> Estado_Em_Transito_Fisico : Evento - Iniciar Devolução ao Estoque Central
+
+                Estado_Alocado_Em_Uso --> Estado_Em_Manutencao_Preventiva : Evento - Retirar Temporariamente para Prevenção
+                Estado_Em_Manutencao_Preventiva --> Estado_Alocado_Em_Uso : Evento - Concluir Reparo e Devolver ao Setor
+                
+                Estado_Alocado_Em_Uso --> Estado_Em_Manutencao_Corretiva : Evento - Registrar Falha de Hardware
+                Estado_Em_Manutencao_Corretiva --> Estado_Alocado_Em_Uso : Evento - Concluir Reparo e Devolver ao Setor
+
+                Estado_Disponivel_Estoque --> Estado_Em_Manutencao_Corretiva : Evento - Identificar Defeito no Almoxarifado
+                Estado_Em_Manutencao_Corretiva --> Estado_Disponivel_Estoque : Evento - Concluir Reparo e Estocar
+                
+                Estado_Em_Manutencao_Corretiva --> Estado_Terminal_Baixado_Inativo : Evento - Declarar Manutenção Inviável (Perda Total)
+                Estado_Disponivel_Estoque --> Estado_Terminal_Baixado_Inativo : Evento - Registrar Alienação ou Descarte
+                Estado_Alocado_Em_Uso --> Estado_Terminal_Baixado_Inativo : Evento - Registrar Furto ou Extravio
+
+                Estado_Terminal_Baixado_Inativo --> [*] : O ciclo de vida da entidade está selado
+        </div>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'default',
+            securityLevel: 'loose',
+            useMaxWidth: true
+        });
+    </script>
+</body>
+</html>
